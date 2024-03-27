@@ -11,10 +11,10 @@
                         <div>
 
                             <form class="form-inline">
-                                <select class="form-control">
-                                    <option>Terakhir</option>
-                                    <option>Terbaru</option>
-                                </select>
+                            <select class="form-control" onchange="sort_by(this.value)">
+                                <option value="terbaru" {{((Request::query('sort_by') && Request::query('sort_by')=='terbaru' ) || !Request::query('sort_by') )?'selected':''}}>Terbaru</option>
+                                <option value="terakhir" {{(Request::query('sort_by') && Request::query('sort_by')=='terakhir')?'selected':''}}>Terakhir</option>
+                            </select>
                             </form>
                         </div>
                     </div>
@@ -29,10 +29,12 @@
 
                     <div class="row">
                         <div class="col-md-3">
+                          <p>Di Filter Oleh Kategori</p>
                           <div class="list-group">
-                              <a href="#" class="list-group-item list-group-item-action">Two Piece</a>
-                              <a href="#" class="list-group-item list-group-item-action">Fairy Tape</a>
-                              <a href="#" class="list-group-item list-group-item-action">Jujur Kasian</a>
+                              <a href="javascript:filter_image('')" class="list-group-item list-group-item-action {{(!Request::query('category'))?'active':''}}">Semua</a>
+                              <a href="javascript:filter_image('twopiece')" class="list-group-item list-group-item-action {{(Request::query('category')=='twopiece')?'active':''}}">Two Piece</a>
+                              <a href="javascript:filter_image('fairytape')" class="list-group-item list-group-item-action {{(Request::query('category')=='fairytape')?'active':''}}">Fairy Tape</a>
+                              <a href="javascript:filter_image('jujurkasian')" class="list-group-item list-group-item-action {{(Request::query('category')=='jujurkasian')?'active':''}}">Jujur Kasian</a>
                           </div>
                         </div>
                         <div class="col-md-9">
@@ -100,144 +102,177 @@
                                       </div>
                                   </div>
 
-                                  <div class="col-md-12 mt-4">
-                                      <div class="row">
-                                          <div class="col-md-3 mb-4">
-                                              <a href="#">
-                                                  <img src="https://placehold.co/600x400/000000/FFF" height="100%" width="100%">
-                                              </a>
-                                          </div>
-                                          <div class="col-md-3 mb-4">
-                                              <a href="#">
-                                                  <img src="https://placehold.co/600x400/000000/FFF" height="100%" width="100%">
-                                              </a>
-                                          </div>                                <div class="col-md-3 mb-4">
-                                              <a href="#">
-                                                  <img src="https://placehold.co/600x400/000000/FFF" height="100%" width="100%">
-                                              </a>
-                                          </div>                                <div class="col-md-3 mb-4">
-                                              <a href="#">
-                                                  <img src="https://placehold.co/600x400/000000/FFF" height="100%" width="100%">
-                                              </a>
-                                          </div>
-                                      </div>
+                          <div class="col-md-12 mt-4">
+                              <div class="row">
+
+                                @if(count($images))
+
+                                  @foreach($images as $image)
+                                    <div class="col-md-3 mb-4">
+                                          <a href="#">
+                                              <img src="{{asset('user_images/thumb/'.$image->image)}}" height="100%" width="100%">
+                                          </a> 
+                                    </div>
+                                  @endforeach
+
+                                  @else
+                                    <div class="col-md-12">
+                                      <p>Gambar Tidak di Temukan</p>
+                                    </div>
+                                @endif
+
+                                @if(count($images))
+                                  <div class="col-md-12">
+                                    {{$images->appends(Request::query())->links()}}
                                   </div>
+                                @endif
+
+
                               </div>
-                                  </div>
 
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          @endsection
+                           </div>
+                       </div>
+
+                     </div>
+
+                   </div>
 
 
-
-          @section('js')
-          <script type="text/javascript">
-            $("#image_upload_form").validate({
-            rules: {
-              caption: {
-                required: true,
-                maxlength: 255
-              },
-              category: {
-                required: true
-              },
-              image:{
-                required:true,
-                extension:"png|jpeg|jpg|bmp"
-              }
-
-            },
-            messages: {
-              caption: {
-                required: "Mohon untuk Masukan Keterangan Foto.",
-                maxlength: "Max. 255 characters allowed."
-              },
-              category: {
-                required: "Mohon pilih Kategori Foto.",
-              },
-              image: {
-                required: "Upload Foto.",
-                extension: "Hanya jpeg,jpg,png,bmp allowed",
-              }
-            },
-              errorPlacement:function(error,element){
-                if(element.attr('name')=="image"){
-                  error.insertAfter("#image_error");
-                }else{
-                  error.insertAfter(element);
-                }
-              }
-            });
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
 
 
 
-              function readFile(input) {
-            if (input.files && input.files[0]) {
-              var reader = new FileReader();
+@section('js')
+<script type="text/javascript">
 
-              reader.onload = function(e) {
+  var query={};
 
-                var validImageType=['image/png','image/bmp','image/jpeg','image/jpg'];
+  @if(Request::query('category'))
+  Object.assign(query,{'category':"{{Request::query('category')}}"});
+  @endif
+  
+  @if(Request::query('sort_by'))
+    Object.assign(query,{'sort_by':"{{Request::query('sort_by')}}"});
+  @endif
 
-                if(!validImageType.includes(input.files[0]['type'])){
-                  var htmlPreview =
-                  '<p>Image preview not available</p>' +
-                  '<p>' + input.files[0].name + '</p>';
-                }else{
-                  var htmlPreview =
-                  '<img width="70%" height="300" src="' + e.target.result + '" />' +
-                  '<p>' + input.files[0].name + '</p>';
-                }
-                
-            
-                var wrapperZone = $(input).parent();
-                var previewZone = $(input).parent().parent().find('.preview-zone');
-                var boxZone = $(input).parent().parent().find('.preview-zone').find('.box').find('.box-body');
+  function filter_image(value){
+    Object.assign(query,{'category':value});
+    window.location.href="{{route('home')}}"+'?'+$.param(query);
+  }
 
-                wrapperZone.removeClass('dragover');
-                previewZone.removeClass('hidden');
-                boxZone.empty();
-                boxZone.append(htmlPreview);
-              };
+  function sort_by(value){
+    Object.assign(query,{'sort_by':value});
+    window.location.href="{{route('home')}}"+'?'+$.param(query);
+  }
 
-              reader.readAsDataURL(input.files[0]);
-            }
-          }
 
-          function reset(e) {
-            e.wrap('<form>').closest('form').get(0).reset();
-            e.unwrap();
-          }
 
-          $(".dropzone").change(function() {
-            readFile(this);
-          });
+  $("#image_upload_form").validate({
+  rules: {
+    caption: {
+      required: true,
+      maxlength: 255
+    },
+    category: {
+      required: true
+    },
+    image:{
+      required:true,
+      extension:"png|jpeg|jpg|bmp"
+    }
 
-          $('.dropzone-wrapper').on('dragover', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $(this).addClass('dragover');
-          });
+  },
+  messages: {
+    caption: {
+      required: "Mohon untuk Masukan Keterangan Foto.",
+      maxlength: "Max. 255 characters allowed."
+    },
+    category: {
+      required: "Mohon pilih Kategori Foto.",
+    },
+    image: {
+      required: "Upload Foto.",
+      extension: "Hanya jpeg,jpg,png,bmp allowed",
+    }
+  },
+    errorPlacement:function(error,element){
+      if(element.attr('name')=="image"){
+        error.insertAfter("#image_error");
+      }else{
+        error.insertAfter(element);
+      }
+    }
+  });
 
-          $('.dropzone-wrapper').on('dragleave', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $(this).removeClass('dragover');
-          });
 
-          $('.remove-preview').on('click', function() {
-            var boxZone = $(this).parents('.preview-zone').find('.box-body');
-            var previewZone = $(this).parents('.preview-zone');
-            var dropzone = $(this).parents('.form-group').find('.dropzone');
-            boxZone.empty();
-            previewZone.addClass('hidden');
-            reset(dropzone);
-          });
 
-          </script>
-          @endsection
+    function readFile(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+
+      var validImageType=['image/png','image/bmp','image/jpeg','image/jpg'];
+
+      if(!validImageType.includes(input.files[0]['type'])){
+        var htmlPreview =
+        '<p>Image preview not available</p>' +
+        '<p>' + input.files[0].name + '</p>';
+      }else{
+        var htmlPreview =
+        '<img width="70%" height="300" src="' + e.target.result + '" />' +
+        '<p>' + input.files[0].name + '</p>';
+      }
+      
+  
+      var wrapperZone = $(input).parent();
+      var previewZone = $(input).parent().parent().find('.preview-zone');
+      var boxZone = $(input).parent().parent().find('.preview-zone').find('.box').find('.box-body');
+
+      wrapperZone.removeClass('dragover');
+      previewZone.removeClass('hidden');
+      boxZone.empty();
+      boxZone.append(htmlPreview);
+    };
+
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function reset(e) {
+  e.wrap('<form>').closest('form').get(0).reset();
+  e.unwrap();
+}
+
+$(".dropzone").change(function() {
+  readFile(this);
+});
+
+$('.dropzone-wrapper').on('dragover', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  $(this).addClass('dragover');
+});
+
+$('.dropzone-wrapper').on('dragleave', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  $(this).removeClass('dragover');
+});
+
+$('.remove-preview').on('click', function() {
+  var boxZone = $(this).parents('.preview-zone').find('.box-body');
+  var previewZone = $(this).parents('.preview-zone');
+  var dropzone = $(this).parents('.form-group').find('.dropzone');
+  boxZone.empty();
+  previewZone.addClass('hidden');
+  reset(dropzone);
+});
+
+</script>
+@endsection
