@@ -21,21 +21,22 @@
                 </div>
 
                 <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
+                  @if (session('status'))
+                      <div class="alert alert-success" role="alert">
+                          {{ session('status') }}
+                      </div>
+                  @endif
 
+                    <a href="/buat-album" class="btn btn-primary">Create Album</a>
                     <div class="row">
                         <div class="col-md-3">
                           <p>Di Filter Oleh Kategori</p>
                           <div class="list-group">
-                              <a href="javascript:filter_image('')" class="list-group-item list-group-item-action {{(!Request::query('category'))?'active':''}}">Semua</a>
-                              <a href="javascript:filter_image('twopiece')" class="list-group-item list-group-item-action {{(Request::query('category')=='twopiece')?'active':''}}">Two Piece</a>
-                              <a href="javascript:filter_image('fairytape')" class="list-group-item list-group-item-action {{(Request::query('category')=='fairytape')?'active':''}}">Fairy Tape</a>
-                              <a href="javascript:filter_image('jujurkasian')" class="list-group-item list-group-item-action {{(Request::query('category')=='jujurkasian')?'active':''}}">Jujur Kasian</a>
-                          </div>
+                            <a href="javascript:filter_image('')" class="list-group-item list-group-item-action {{(!Request::query('category'))?'active':''}}">Semua</a>
+                            @foreach($album as $item)
+                                <a href="javascript:filter_image('{{ $item->id }}')" class="list-group-item list-group-item-action {{(Request::query('category')==$item->id)?'active':''}}">{{ $item->nama }}</a>
+                            @endforeach
+                        </div>
                         </div>
                         <div class="col-md-9">
 
@@ -63,10 +64,11 @@
                                             <div class="form-group">
                                                 <label for="category">Pilih Daftar Album</label>
                                                 <select name="category" class="form-control" id="category">
-                                                  <option value="">Pilih Kategori</option>
-                                                  <option value="twopiece">Two Piece</option>
-                                                  <option value="fairytape">Fairy Tape</option>
-                                                  <option value="jujurkasian">Jujur Kasian</option>
+                                             
+                                                  <option value="twopiece">Pilih Kategori</option>
+                                                  @foreach ($album as $item)
+                                                  <option value="{{$item->id}}">{{ $item->nama}}</option>
+                                                  @endforeach
                                                 </select>
                                               </div>
                                               <div class="form-group">
@@ -102,19 +104,29 @@
                                       </div>
                                   </div>
 
-                          <div class="col-md-12 mt-4">
+                          <div class="col-md-12 mt-2">
                               <div class="row">
 
                                 @if(count($images))
 
                                   @foreach($images as $image)
                                     <div class="col-md-3 mb-4">
-                                          <a href="#">
+                                          <a href="{{asset('user_images/'.$image->image)}}" class="fancybox" data-caption="{{$image->caption}}" data-id="{{$image->id}}" data-fancybox="gallery">
                                               <img src="{{asset('user_images/thumb/'.$image->image)}}" height="100%" width="100%">
+                                            
                                           </a> 
+                                          <div class="mt-1">
+                                            <form class="main-form mb-5" action="/hapus/{{$image->id}}" method="POST">
+                                              <input type="hidden" class="form-control" value="{{$image->id}}" placeholder="Nama Kategori">
+                                              @csrf
+                                                
+                                                <button type="submit" class="btn btn-danger"> Delete</button>
+                                              </form>
+                                          </div>
+                                        
                                     </div>
                                   @endforeach
-
+                                    
                                   @else
                                     <div class="col-md-12">
                                       <p>Gambar Tidak di Temukan</p>
@@ -123,6 +135,7 @@
 
                                 @if(count($images))
                                   <div class="col-md-12">
+                                    <br>
                                     {{$images->appends(Request::query())->links()}}
                                   </div>
                                 @endif
@@ -148,6 +161,7 @@
 
 
 @section('js')
+
 <script type="text/javascript">
 
   var query={};
@@ -169,7 +183,6 @@
     Object.assign(query,{'sort_by':value});
     window.location.href="{{route('home')}}"+'?'+$.param(query);
   }
-
 
 
   $("#image_upload_form").validate({

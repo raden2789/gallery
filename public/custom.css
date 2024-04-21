@@ -2,6 +2,11 @@ label.error {
     color: red;
 }
 
+.fancybox-delete-button {
+    background: red !important;
+    padding: 8px 60px 12px 10px !important;
+}
+
 .container {
     padding: 50px 10%;
 }
